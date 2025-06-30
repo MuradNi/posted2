@@ -82,6 +82,86 @@ export default function DiscordBots() {
     },
   });
 
+  const startBotMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest('POST', `/api/discord-bots/${id}/start`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Discord bot started successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/discord-bots'] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to start Discord bot",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const stopBotMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest('POST', `/api/discord-bots/${id}/stop`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Discord bot stopped successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/discord-bots'] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to stop Discord bot",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const startAllBotsMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', '/api/discord-bots/start-all');
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Success",
+        description: data.message || "All Discord bots started successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/discord-bots'] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to start all Discord bots",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const stopAllBotsMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', '/api/discord-bots/stop-all');
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Success",
+        description: data.message || "All Discord bots stopped successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/discord-bots'] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to stop all Discord bots",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.token || !formData.serverId || !formData.serverName) {
@@ -107,18 +187,33 @@ export default function DiscordBots() {
           <h2 className="text-2xl font-semibold text-gray-900">Discord Bots</h2>
           <p className="text-sm text-gray-500 mt-1">Manage your Discord automation bots</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Discord Bot
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add Discord Bot</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            onClick={() => startAllBotsMutation.mutate()}
+            disabled={startAllBotsMutation.isPending}
+          >
+            Start All
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => stopAllBotsMutation.mutate()}
+            disabled={stopAllBotsMutation.isPending}
+          >
+            Stop All
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Discord Bot
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Add Discord Bot</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Label htmlFor="name">Bot Name</Label>
                 <Input
@@ -167,10 +262,11 @@ export default function DiscordBots() {
               </div>
               <Button type="submit" className="w-full" disabled={createBotMutation.isPending}>
                 {createBotMutation.isPending ? 'Creating...' : 'Create Bot'}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Stats */}
@@ -246,6 +342,8 @@ export default function DiscordBots() {
                   key={bot.id}
                   bot={bot}
                   platform="discord"
+                  onStart={(bot) => startBotMutation.mutate(bot.id)}
+                  onStop={(bot) => stopBotMutation.mutate(bot.id)}
                   onDelete={(bot) => deleteBotMutation.mutate(bot.id)}
                 />
               ))}

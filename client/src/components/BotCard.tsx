@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Trash2 } from "lucide-react";
+import { Settings, Trash2, Play, Square } from "lucide-react";
 import type { DiscordBot, WhatsappBot } from "@shared/schema";
 
 interface BotCardProps {
@@ -9,9 +9,11 @@ interface BotCardProps {
   platform: 'discord' | 'whatsapp';
   onConfigure?: (bot: DiscordBot | WhatsappBot) => void;
   onDelete?: (bot: DiscordBot | WhatsappBot) => void;
+  onStart?: (bot: DiscordBot | WhatsappBot) => void;
+  onStop?: (bot: DiscordBot | WhatsappBot) => void;
 }
 
-export function BotCard({ bot, platform, onConfigure, onDelete }: BotCardProps) {
+export function BotCard({ bot, platform, onConfigure, onDelete, onStart, onStop }: BotCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'online':
@@ -74,10 +76,30 @@ export function BotCard({ bot, platform, onConfigure, onDelete }: BotCardProps) 
             <Badge variant={bot.status === 'online' || bot.status === 'connected' ? 'default' : 'secondary'}>
               {getStatusText(bot.status)}
             </Badge>
+            {bot.status === 'online' || bot.status === 'connected' ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onStop?.(bot)}
+                title="Stop Bot"
+              >
+                <Square className="w-4 h-4" />
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onStart?.(bot)}
+                title="Start Bot"
+              >
+                <Play className="w-4 h-4" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onConfigure?.(bot)}
+              title="Configure"
             >
               <Settings className="w-4 h-4" />
             </Button>
@@ -85,6 +107,7 @@ export function BotCard({ bot, platform, onConfigure, onDelete }: BotCardProps) 
               variant="ghost"
               size="sm"
               onClick={() => onDelete?.(bot)}
+              title="Delete"
             >
               <Trash2 className="w-4 h-4" />
             </Button>

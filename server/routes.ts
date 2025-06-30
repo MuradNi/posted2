@@ -123,6 +123,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/discord-bots/:id/start', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const bot = await storage.getDiscordBot(id);
+      
+      if (!bot) {
+        return res.status(404).json({ error: 'Bot not found' });
+      }
+      
+      await discordService.connectBot(bot);
+      broadcast({ type: 'bot_started', platform: 'discord', botId: id });
+      res.json({ success: true, message: 'Bot started successfully' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to start Discord bot' });
+    }
+  });
+
+  app.post('/api/discord-bots/:id/stop', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await discordService.disconnectBot(id);
+      broadcast({ type: 'bot_stopped', platform: 'discord', botId: id });
+      res.json({ success: true, message: 'Bot stopped successfully' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to stop Discord bot' });
+    }
+  });
+
+  app.post('/api/discord-bots/start-all', async (req, res) => {
+    try {
+      const bots = await storage.getDiscordBots();
+      const activeBots = bots.filter(bot => bot.isActive);
+      
+      for (const bot of activeBots) {
+        try {
+          await discordService.connectBot(bot);
+        } catch (error) {
+          console.error(`Failed to start Discord bot ${bot.name}:`, error);
+        }
+      }
+      
+      broadcast({ type: 'all_bots_started', platform: 'discord' });
+      res.json({ success: true, message: `Started ${activeBots.length} Discord bots` });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to start all Discord bots' });
+    }
+  });
+
+  app.post('/api/discord-bots/stop-all', async (req, res) => {
+    try {
+      const connectedBots = discordService.getConnectedBots();
+      
+      for (const botId of connectedBots) {
+        try {
+          await discordService.disconnectBot(botId);
+        } catch (error) {
+          console.error(`Failed to stop Discord bot ${botId}:`, error);
+        }
+      }
+      
+      broadcast({ type: 'all_bots_stopped', platform: 'discord' });
+      res.json({ success: true, message: `Stopped ${connectedBots.length} Discord bots` });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to stop all Discord bots' });
+    }
+  });
+
   app.delete('/api/discord-bots/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -181,6 +248,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ qrCode });
     } catch (error) {
       res.status(500).json({ error: 'Failed to get QR code' });
+    }
+  });
+
+  app.post('/api/whatsapp-bots/:id/start', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const bot = await storage.getWhatsappBot(id);
+      
+      if (!bot) {
+        return res.status(404).json({ error: 'Bot not found' });
+      }
+      
+      await whatsappService.connectBot(bot);
+      broadcast({ type: 'bot_started', platform: 'whatsapp', botId: id });
+      res.json({ success: true, message: 'Bot started successfully' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to start WhatsApp bot' });
+    }
+  });
+
+  app.post('/api/whatsapp-bots/:id/stop', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await whatsappService.disconnectBot(id);
+      broadcast({ type: 'bot_stopped', platform: 'whatsapp', botId: id });
+      res.json({ success: true, message: 'Bot stopped successfully' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to stop WhatsApp bot' });
+    }
+  });
+
+  app.post('/api/whatsapp-bots/start-all', async (req, res) => {
+    try {
+      const bots = await storage.getWhatsappBots();
+      const activeBots = bots.filter(bot => bot.isActive);
+      
+      for (const bot of activeBots) {
+        try {
+          await whatsappService.connectBot(bot);
+        } catch (error) {
+          console.error(`Failed to start WhatsApp bot ${bot.name}:`, error);
+        }
+      }
+      
+      broadcast({ type: 'all_bots_started', platform: 'whatsapp' });
+      res.json({ success: true, message: `Started ${activeBots.length} WhatsApp bots` });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to start all WhatsApp bots' });
+    }
+  });
+
+  app.post('/api/whatsapp-bots/stop-all', async (req, res) => {
+    try {
+      const connectedBots = whatsappService.getConnectedBots();
+      
+      for (const botId of connectedBots) {
+        try {
+          await whatsappService.disconnectBot(botId);
+        } catch (error) {
+          console.error(`Failed to stop WhatsApp bot ${botId}:`, error);
+        }
+      }
+      
+      broadcast({ type: 'all_bots_stopped', platform: 'whatsapp' });
+      res.json({ success: true, message: `Stopped ${connectedBots.length} WhatsApp bots` });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to stop all WhatsApp bots' });
     }
   });
 

@@ -88,6 +88,86 @@ export default function WhatsAppBots() {
     },
   });
 
+  const startBotMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest('POST', `/api/whatsapp-bots/${id}/start`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "WhatsApp bot started successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/whatsapp-bots'] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to start WhatsApp bot",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const stopBotMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest('POST', `/api/whatsapp-bots/${id}/stop`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "WhatsApp bot stopped successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/whatsapp-bots'] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to stop WhatsApp bot",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const startAllBotsMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', '/api/whatsapp-bots/start-all');
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Success",
+        description: data.message || "All WhatsApp bots started successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/whatsapp-bots'] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to start all WhatsApp bots",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const stopAllBotsMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', '/api/whatsapp-bots/stop-all');
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Success",
+        description: data.message || "All WhatsApp bots stopped successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/whatsapp-bots'] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to stop all WhatsApp bots",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.phoneNumber) {
@@ -113,46 +193,62 @@ export default function WhatsAppBots() {
           <h2 className="text-2xl font-semibold text-gray-900">WhatsApp Bots</h2>
           <p className="text-sm text-gray-500 mt-1">Manage your WhatsApp automation bots</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Add WhatsApp Bot
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add WhatsApp Bot</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Bot Name</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Customer Support Bot"
-                />
-              </div>
-              <div>
-                <Label htmlFor="phoneNumber">Phone Number</Label>
-                <Input
-                  id="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={(e) => setFormData(prev => ({ ...prev, phoneNumber: e.target.value }))}
-                  placeholder="+1234567890"
-                />
-              </div>
-              <div className="text-sm text-gray-600 p-4 bg-blue-50 rounded-lg">
-                <p className="font-medium">Next Steps:</p>
-                <p>After creating the bot, you'll need to scan a QR code with your WhatsApp mobile app to connect it.</p>
-              </div>
-              <Button type="submit" className="w-full" disabled={createBotMutation.isPending}>
-                {createBotMutation.isPending ? 'Creating...' : 'Create Bot'}
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            onClick={() => startAllBotsMutation.mutate()}
+            disabled={startAllBotsMutation.isPending}
+          >
+            Start All
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => stopAllBotsMutation.mutate()}
+            disabled={stopAllBotsMutation.isPending}
+          >
+            Stop All
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Add WhatsApp Bot
               </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Add WhatsApp Bot</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="name">Bot Name</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Customer Support Bot"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="phoneNumber">Phone Number</Label>
+                  <Input
+                    id="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                    placeholder="+1234567890"
+                  />
+                </div>
+                <div className="text-sm text-gray-600 p-4 bg-blue-50 rounded-lg">
+                  <p className="font-medium">Next Steps:</p>
+                  <p>After creating the bot, you'll need to scan a QR code with your WhatsApp mobile app to connect it.</p>
+                </div>
+                <Button type="submit" className="w-full" disabled={createBotMutation.isPending}>
+                  {createBotMutation.isPending ? 'Creating...' : 'Create Bot'}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Stats */}
@@ -228,6 +324,8 @@ export default function WhatsAppBots() {
                   <BotCard
                     bot={bot}
                     platform="whatsapp"
+                    onStart={(bot) => startBotMutation.mutate(bot.id)}
+                    onStop={(bot) => stopBotMutation.mutate(bot.id)}
                     onDelete={(bot) => deleteBotMutation.mutate(bot.id)}
                   />
                   {(bot.status === 'awaiting_qr_scan' || bot.status === 'disconnected') && (
